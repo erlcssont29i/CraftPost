@@ -427,7 +427,7 @@ const App: React.FC = () => {
                             value={inputText}
                             onChange={(e) => setInputText(e.target.value)}
                             placeholder="Type your messy thoughts here... (e.g. 'i think remote work is good but lonely sometimes we need better tools')"
-                            className="w-full h-32 p-4 md:p-6 text-gray-700 placeholder-gray-400 outline-none resize-none text-base"
+                            className="w-full h-64 p-4 md:p-6 text-gray-700 placeholder-gray-400 outline-none resize-y text-base"
                         />
                         <div className="bg-gray-50 px-4 py-3 flex justify-between items-center border-t border-gray-100">
                            <span className="text-xs text-gray-500 hidden md:inline-block">
