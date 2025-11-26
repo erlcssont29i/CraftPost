@@ -1,8 +1,10 @@
-export enum StyleType {
-  NATURAL = 'NATURAL',
-  PROFESSIONAL = 'PROFESSIONAL',
-  EDUCATIONAL = 'EDUCATIONAL'
-}
+export type StyleType = string;
+
+export const DefaultStyles = {
+  NATURAL: 'NATURAL',
+  PROFESSIONAL: 'PROFESSIONAL',
+  EDUCATIONAL: 'EDUCATIONAL'
+} as const;
 
 export interface TemplateConfig {
   name: string;
@@ -21,6 +23,6 @@ export interface Message {
 export interface SavedThread {
   id: string;
   content: string;
-  style: StyleType;
+  style: string;
   timestamp: number;
 }

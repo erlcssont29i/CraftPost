@@ -1,7 +1,7 @@
-import { StyleType, TemplateConfig } from './types';
+import { DefaultStyles, TemplateConfig } from './types';
 
-export const DEFAULT_TEMPLATES: Record<StyleType, TemplateConfig> = {
-  [StyleType.NATURAL]: {
+export const DEFAULT_TEMPLATES: Record<string, TemplateConfig> = {
+  [DefaultStyles.NATURAL]: {
     name: 'Natural Flow',
     description: 'Casual, authentic, and relatable vibes.',
     systemPrompt: `You are an expert social media ghostwriter specializing in "Natural" style threads. 
@@ -25,7 +25,7 @@ seriously, why do we do this?
 
 let’s normalize asynchronous updates. please.`
   },
-  [StyleType.PROFESSIONAL]: {
+  [DefaultStyles.PROFESSIONAL]: {
     name: 'Professional',
     description: 'Clean, authoritative, and industry-focused.',
     systemPrompt: `You are a LinkedIn and Twitter thought leader specializing in professional communication.
@@ -53,7 +53,7 @@ Here is how top teams are actually leveraging AI:
 
 Stop asking AI to write. Start asking it to think.`
   },
-  [StyleType.EDUCATIONAL]: {
+  [DefaultStyles.EDUCATIONAL]: {
     name: 'Educational',
     description: 'Step-by-step, clear, and high-value tutorials.',
     systemPrompt: `You are a master educator and technical writer.

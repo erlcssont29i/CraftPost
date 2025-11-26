@@ -9,9 +9,11 @@ import {
   Save as SaveIcon, 
   Sparkles,
   User,
-  Bot
+  Bot,
+  Plus,
+  Pencil
 } from 'lucide-react';
-import { StyleType, TemplateConfig, Message, SavedThread } from './types';
+import { StyleType, TemplateConfig, Message, SavedThread, DefaultStyles } from './types';
 import { DEFAULT_TEMPLATES } from './constants';
 import { geminiService } from './services/geminiService';
 import TemplateEditor from './components/TemplateEditor';
@@ -23,49 +25,99 @@ const StyleCard = ({
   active, 
   config, 
   onClick, 
-  onEdit 
+  onEdit,
+  onRename
 }: { 
-  styleKey: StyleType; 
+  styleKey: string; 
   active: boolean; 
   config: TemplateConfig; 
   onClick: () => void; 
   onEdit: (e: React.MouseEvent) => void;
-}) => (
-  <div 
-    onClick={onClick}
-    className={`
-      relative group cursor-pointer rounded-xl border-2 p-5 transition-all duration-300
-      ${active 
-        ? 'border-blue-500 bg-blue-50 shadow-md scale-[1.02]' 
-        : 'border-gray-200 bg-white hover:border-blue-200 hover:shadow-sm'
-      }
-    `}
-  >
-    <div className="flex justify-between items-start mb-2">
-      <h3 className={`font-bold ${active ? 'text-blue-700' : 'text-gray-800'}`}>
-        {config.name}
-      </h3>
-      {active && <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />}
-    </div>
-    <p className="text-xs text-gray-500 mb-6 leading-relaxed">
-      {config.description}
-    </p>
-    
-    <button
-      onClick={onEdit}
+  onRename: (newName: string) => void;
+}) => {
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [tempName, setTempName] = useState(config.name);
+
+  // Sync tempName if config.name changes externally
+  useEffect(() => {
+    setTempName(config.name);
+  }, [config.name]);
+
+  const handleRenameSubmit = () => {
+    if (tempName.trim()) {
+      onRename(tempName.trim());
+    } else {
+      setTempName(config.name); // Revert if empty
+    }
+    setIsRenaming(false);
+  };
+
+  return (
+    <div 
+      onClick={onClick}
       className={`
-        absolute bottom-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-colors
+        relative group cursor-pointer rounded-xl border-2 p-5 transition-all duration-300
         ${active 
-          ? 'text-blue-600 bg-blue-100 hover:bg-blue-200' 
-          : 'text-gray-400 bg-gray-100 hover:text-gray-700 hover:bg-gray-200'
+          ? 'border-blue-500 bg-blue-50 shadow-md scale-[1.02]' 
+          : 'border-gray-200 bg-white hover:border-blue-200 hover:shadow-sm'
         }
       `}
     >
-      <Settings size={12} />
-      Prompt Template
-    </button>
-  </div>
-);
+      <div className="flex justify-between items-start mb-2 h-7">
+        {isRenaming ? (
+            <input
+                autoFocus
+                value={tempName}
+                onChange={(e) => setTempName(e.target.value)}
+                onBlur={handleRenameSubmit}
+                onKeyDown={(e) => e.key === 'Enter' && handleRenameSubmit()}
+                onClick={(e) => e.stopPropagation()} 
+                className="font-bold text-gray-800 border-b border-blue-500 outline-none bg-transparent w-full text-base"
+            />
+        ) : (
+            <div className="flex items-center gap-2 group/title w-full">
+                <h3 
+                  onClick={(e) => {
+                       e.stopPropagation();
+                       setIsRenaming(true);
+                  }}
+                  className={`font-bold ${active ? 'text-blue-700' : 'text-gray-800'} hover:underline decoration-dashed decoration-gray-400 underline-offset-4 cursor-text truncate`}
+                >
+                    {config.name}
+                </h3>
+                <button
+                    onClick={(e) => {
+                         e.stopPropagation();
+                         setIsRenaming(true);
+                    }}
+                    className="opacity-0 group-hover/title:opacity-100 text-gray-400 hover:text-blue-600 transition-opacity"
+                >
+                    <Pencil size={12} />
+                </button>
+            </div>
+        )}
+        {active && !isRenaming && <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse flex-shrink-0" />}
+      </div>
+      <p className="text-xs text-gray-500 mb-6 leading-relaxed line-clamp-2">
+        {config.description}
+      </p>
+      
+      <button
+        onClick={onEdit}
+        className={`
+          absolute bottom-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-colors
+          ${active 
+            ? 'text-blue-600 bg-blue-100 hover:bg-blue-200' 
+            : 'text-gray-400 bg-gray-100 hover:text-gray-700 hover:bg-gray-200'
+          }
+        `}
+      >
+        <Settings size={12} />
+        Prompt Template
+      </button>
+    </div>
+  );
+};
 
 const ChatBubble = ({ message, onCopy, onSave }: { message: Message; onCopy?: (text: string) => void; onSave?: (text: string) => void; }) => {
   const isModel = message.role === 'model';
@@ -121,8 +173,9 @@ const ChatBubble = ({ message, onCopy, onSave }: { message: Message; onCopy?: (t
 const App: React.FC = () => {
   // State
   const [inputText, setInputText] = useState('');
-  const [selectedStyle, setSelectedStyle] = useState<StyleType>(StyleType.NATURAL);
-  const [templates, setTemplates] = useState(DEFAULT_TEMPLATES);
+  const [selectedStyle, setSelectedStyle] = useState<string>(DefaultStyles.NATURAL);
+  const [templates, setTemplates] = useState<Record<string, TemplateConfig>>(DEFAULT_TEMPLATES);
+  const [styleOrder, setStyleOrder] = useState<string[]>(Object.keys(DEFAULT_TEMPLATES));
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -146,6 +199,31 @@ const App: React.FC = () => {
       [selectedStyle]: newConfig
     }));
   };
+  
+  const handleRenameStyle = (key: string, newName: string) => {
+    setTemplates(prev => ({
+        ...prev,
+        [key]: {
+            ...prev[key],
+            name: newName
+        }
+    }));
+  };
+
+  const handleAddStyle = () => {
+    const newKey = `STYLE_${Date.now()}`;
+    const newTemplate: TemplateConfig = {
+        name: 'New Style',
+        description: 'Custom AI persona.',
+        systemPrompt: 'You are a helpful AI assistant specialized in creating engaging content.',
+        examples: 'Input: ... Output: ...'
+    };
+    
+    setTemplates(prev => ({ ...prev, [newKey]: newTemplate }));
+    setStyleOrder(prev => [...prev, newKey]);
+    setSelectedStyle(newKey);
+    setIsEditorOpen(true); // Open editor immediately for the new style
+  };
 
   const handleGenerate = async () => {
     if (!inputText.trim()) return;
@@ -158,25 +236,7 @@ const App: React.FC = () => {
       timestamp: Date.now()
     };
 
-    // If this is the FIRST message or we are switching context significantly,
-    // we should technically reset the session in the UI perspective, 
-    // but for "Refinement", we want to keep history.
-    // STRATEGY: 
-    // 1. If chatHistory is empty, start fresh.
-    // 2. If chatHistory exists, append.
-    // However, if the user changes styles, we MUST start a new session because the system prompt is immutable in a session.
-    
     const isNewSession = chatHistory.length === 0;
-
-    // We can't easily detect "style change" inside the session object without tracking it.
-    // For this app, let's assume if the user hits the main "Generate" button (not reply), it's a new request.
-    // But if we want multi-turn, we need a "Reply" area separate from the "Initial Input".
-    // To simplify UX: 
-    // - The top input box is for the INITIAL prompt. 
-    // - Once generated, a chat input appears at the bottom for refinement.
-    
-    // Actually, let's just clear history if the user uses the top "Generate Thread" button.
-    // This implies a fresh start.
     setChatHistory([userMsg]); 
     
     try {
@@ -263,13 +323,15 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
       
       {/* Template Editor Modal */}
-      <TemplateEditor
-        isOpen={isEditorOpen}
-        onClose={() => setIsEditorOpen(false)}
-        initialConfig={templates[selectedStyle]}
-        onSave={handleTemplateSave}
-        styleName={templates[selectedStyle].name}
-      />
+      {templates[selectedStyle] && (
+        <TemplateEditor
+            isOpen={isEditorOpen}
+            onClose={() => setIsEditorOpen(false)}
+            initialConfig={templates[selectedStyle]}
+            onSave={handleTemplateSave}
+            styleName={templates[selectedStyle].name}
+        />
+      )}
 
       {/* LEFT SIDEBAR: Saved & Branding (Desktop) */}
       <div className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 h-screen sticky top-0">
@@ -290,7 +352,9 @@ const App: React.FC = () => {
               {savedThreads.map(thread => (
                 <div key={thread.id} className="p-3 rounded-lg border border-gray-100 bg-gray-50 hover:bg-blue-50 hover:border-blue-100 transition-colors cursor-pointer group">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] font-bold text-gray-500 uppercase">{templates[thread.style].name}</span>
+                    <span className="text-[10px] font-bold text-gray-500 uppercase">
+                        {templates[thread.style]?.name || 'Unknown'}
+                    </span>
                     <button 
                        onClick={(e) => {
                            e.stopPropagation();
@@ -328,21 +392,33 @@ const App: React.FC = () => {
                 <div className="max-w-3xl mx-auto space-y-6">
                     
                     {/* Style Selection */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {(Object.keys(templates) as StyleType[]).map((style) => (
-                            <StyleCard
-                                key={style}
-                                styleKey={style}
-                                active={selectedStyle === style}
-                                config={templates[style]}
-                                onClick={() => setSelectedStyle(style)}
-                                onEdit={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedStyle(style);
-                                    setIsEditorOpen(true);
-                                }}
-                            />
-                        ))}
+                    <div>
+                        <div className="flex justify-end mb-2">
+                            <button
+                                onClick={handleAddStyle}
+                                className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline decoration-blue-200 underline-offset-2 transition-all"
+                            >
+                                <Plus size={16} />
+                                新增風格
+                            </button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {styleOrder.map((styleKey) => (
+                                <StyleCard
+                                    key={styleKey}
+                                    styleKey={styleKey}
+                                    active={selectedStyle === styleKey}
+                                    config={templates[styleKey]}
+                                    onClick={() => setSelectedStyle(styleKey)}
+                                    onRename={(newName) => handleRenameStyle(styleKey, newName)}
+                                    onEdit={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedStyle(styleKey);
+                                        setIsEditorOpen(true);
+                                    }}
+                                />
+                            ))}
+                        </div>
                     </div>
 
                     {/* Input Area */}
