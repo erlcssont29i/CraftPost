@@ -422,15 +422,15 @@ const App: React.FC = () => {
                     </div>
 
                     {/* Input Area */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 transition-shadow">
+                    <div className="bg-gray-900 rounded-2xl shadow-sm border border-gray-700 overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 transition-shadow">
                         <textarea
                             value={inputText}
                             onChange={(e) => setInputText(e.target.value)}
                             placeholder="Type your messy thoughts here... (e.g. 'i think remote work is good but lonely sometimes we need better tools')"
-                            className="w-full h-64 p-4 md:p-6 text-gray-700 placeholder-gray-400 outline-none resize-y text-base"
+                            className="w-full h-64 p-4 md:p-6 bg-transparent text-white placeholder-gray-500 outline-none resize-y text-base"
                         />
-                        <div className="bg-gray-50 px-4 py-3 flex justify-between items-center border-t border-gray-100">
-                           <span className="text-xs text-gray-500 hidden md:inline-block">
+                        <div className="bg-gray-800 px-4 py-3 flex justify-between items-center border-t border-gray-700">
+                           <span className="text-xs text-gray-400 hidden md:inline-block">
                                ✨ Pro tip: Don't worry about grammar. Just dump your brain.
                            </span>
                            <button
@@ -439,7 +439,7 @@ const App: React.FC = () => {
                                 className={`
                                     flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium text-white transition-all
                                     ${!inputText.trim() || isProcessing 
-                                        ? 'bg-gray-300 cursor-not-allowed' 
+                                        ? 'bg-gray-600 cursor-not-allowed' 
                                         : 'bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg transform hover:-translate-y-0.5'
                                     }
                                 `}
